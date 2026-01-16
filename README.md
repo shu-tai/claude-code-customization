@@ -4,6 +4,8 @@ Custom status line showing usage percentages for Claude Code.
 
 ## Status Line
 
+![Status line showing usage percentages](./images/status-line.png)
+
 Displays your remaining usage in the Claude Code interface:
 
 ```
