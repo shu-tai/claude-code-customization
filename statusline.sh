@@ -20,8 +20,8 @@ import json
 d=json.loads('''$STDIN''')
 cw=d.get('context_window',{})
 used=cw.get('total_input_tokens',0) + cw.get('total_output_tokens',0)
-avail=cw.get('context_window_size',0)
-rem=cw.get('remaining_percentage',100)
+avail=cw.get('context_window_size',0) or 200000
+rem=int(100 * (avail - used) / avail) if avail > 0 else 100
 print(f'{used/1000:.1f} {avail//1000}k {rem}')
 " 2>/dev/null)
 
