@@ -5,9 +5,6 @@
 # Read stdin (status line JSON)
 STDIN=$(cat)
 
-# Debug: log raw input
-echo "$STDIN" > /tmp/statusline_debug.json
-
 # Extract working directory from stdin JSON (relative path only)
 CWD=$(/usr/bin/python3 -c "import sys,json,os; d=json.loads('''$STDIN'''); cwd=d.get('workspace',{}).get('current_dir',''); print(os.path.basename(cwd) if cwd else '')" 2>/dev/null)
 
