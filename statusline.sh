@@ -65,22 +65,22 @@ fi
 FIVE_HR=$(/usr/bin/python3 -c "import sys,json; d=json.loads('''$USAGE'''); print(int(d.get('five_hour',{}).get('utilization',0)))" 2>/dev/null)
 SEVEN_DAY=$(/usr/bin/python3 -c "import sys,json; d=json.loads('''$USAGE'''); print(int(d.get('seven_day',{}).get('utilization',0)))" 2>/dev/null)
 
-# Calculate remaining
-FIVE_HR_REM=$((100 - ${FIVE_HR:-0}))
-SEVEN_DAY_REM=$((100 - ${SEVEN_DAY:-0}))
+# Usage values (already percentage used from API)
+FIVE_HR_USED=${FIVE_HR:-0}
+SEVEN_DAY_USED=${SEVEN_DAY:-0}
 
-# Color based on remaining (ANSI)
-if [ "$FIVE_HR_REM" -gt 50 ]; then
+# Color based on usage (ANSI) - lower is better
+if [ "$FIVE_HR_USED" -lt 50 ]; then
     C5=$'\033[32m'  # green
-elif [ "$FIVE_HR_REM" -gt 20 ]; then
+elif [ "$FIVE_HR_USED" -lt 80 ]; then
     C5=$'\033[33m'  # yellow
 else
     C5=$'\033[31m'  # red
 fi
 
-if [ "$SEVEN_DAY_REM" -gt 50 ]; then
+if [ "$SEVEN_DAY_USED" -lt 50 ]; then
     C7=$'\033[32m'
-elif [ "$SEVEN_DAY_REM" -gt 20 ]; then
+elif [ "$SEVEN_DAY_USED" -lt 80 ]; then
     C7=$'\033[33m'
 else
     C7=$'\033[31m'
@@ -100,4 +100,4 @@ COL3=$((MODEL_LEN > 5 ? MODEL_LEN : 5))  # min width for "model"
 # Header line (bold blue)
 printf "${CB}%-${COL1}s${R}  ${CB}%-${COL2}s${R}  ${CB}%-15s${R}  ${CB}%s${R}\n" "session-directory" "context" "usage" "model"
 # Data line (numerator and usage colored, rest default text)
-printf "${R}%-${COL1}s  ${CT}%s${R}/%-$((COL2 - ${#TOKEN_USED} - 1))s  5h:${C5}%-4s${R} 7d:${C7}%-4s${R}  %s\n" "$CWD" "$TOKEN_USED" "$TOKEN_AVAIL" "${FIVE_HR_REM}%" "${SEVEN_DAY_REM}%" "$MODEL"
+printf "${R}%-${COL1}s  ${CT}%s${R}/%-$((COL2 - ${#TOKEN_USED} - 1))s  5h:${C5}%-4s${R} 7d:${C7}%-4s${R}  %s\n" "$CWD" "$TOKEN_USED" "$TOKEN_AVAIL" "${FIVE_HR_USED}%" "${SEVEN_DAY_USED}%" "$MODEL"

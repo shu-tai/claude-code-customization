@@ -15,10 +15,12 @@ my-project         100.1/200k  5h:42% 7d:92%   Opus 4.5
 
 - **session-directory** - Current working directory (basename)
 - **context** - Tokens used / context window size (numerator color-coded)
-- **usage** - 5-hour and 7-day rolling window remaining (color-coded)
+- **usage** - 5-hour and 7-day rolling window used (color-coded)
 - **model** - Current model name
 
-Colors: green (>50% remaining), yellow (20-50%), red (<20%)
+Context color: green (>50% remaining), yellow (20-50%), red (<20%)
+
+Usage color: green (<50% used), yellow (50-80%), red (>=80%)
 
 Headers are bold blue.
 
