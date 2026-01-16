@@ -1,22 +1,26 @@
 # Claude Code Customization
 
-Custom status line showing usage percentages for Claude Code.
+Custom status line showing context and usage for Claude Code.
 
 ## Status Line
 
-![Status line showing usage percentages](./images/status-line.png)
+![Status line showing context and usage](./images/status-line.png)
 
-Displays your remaining usage in the Claude Code interface:
+Displays context window and remaining usage in the Claude Code interface:
 
 ```
-my-project  5h:42% 7d:92%
+session-directory  context     usage            model
+my-project         100.1/200k  5h:42% 7d:92%   Opus 4.5
 ```
 
-- **cwd** - Current working directory (basename)
-- **5h** - 5-hour rolling window remaining (color-coded)
-- **7d** - 7-day rolling window remaining (color-coded)
+- **session-directory** - Current working directory (basename)
+- **context** - Tokens used / context window size (numerator color-coded)
+- **usage** - 5-hour and 7-day rolling window remaining (color-coded)
+- **model** - Current model name
 
-Colors: green (>50%), yellow (20-50%), red (<20%)
+Colors: green (>50% remaining), yellow (20-50%), red (<20%)
+
+Headers are bold blue.
 
 ## Setup
 
