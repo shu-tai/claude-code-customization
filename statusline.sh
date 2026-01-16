@@ -22,16 +22,16 @@ rem=cw.get('remaining_percentage',100)
 print(f'{used/1000:.1f}/{avail//1000}k {rem}')
 " 2>/dev/null)
 
-# Color for token display
+# Color for token display (using $'...' for ANSI codes)
 TOKEN_REM=${TOKEN_REM:-100}
 if [ "$TOKEN_REM" -gt 50 ]; then
-    CT="\033[32m"  # green
+    CT=$'\033[32m'  # green
 elif [ "$TOKEN_REM" -gt 20 ]; then
-    CT="\033[33m"  # yellow
+    CT=$'\033[33m'  # yellow
 else
-    CT="\033[31m"  # red
+    CT=$'\033[31m'  # red
 fi
-R="\033[0m"
+R=$'\033[0m'
 
 # Get OAuth token from keychain
 CREDS=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null)
@@ -68,19 +68,28 @@ SEVEN_DAY_REM=$((100 - ${SEVEN_DAY:-0}))
 
 # Color based on remaining (ANSI)
 if [ "$FIVE_HR_REM" -gt 50 ]; then
-    C5="\033[32m"  # green
+    C5=$'\033[32m'  # green
 elif [ "$FIVE_HR_REM" -gt 20 ]; then
-    C5="\033[33m"  # yellow
+    C5=$'\033[33m'  # yellow
 else
-    C5="\033[31m"  # red
+    C5=$'\033[31m'  # red
 fi
 
 if [ "$SEVEN_DAY_REM" -gt 50 ]; then
-    C7="\033[32m"
+    C7=$'\033[32m'
 elif [ "$SEVEN_DAY_REM" -gt 20 ]; then
-    C7="\033[33m"
+    C7=$'\033[33m'
 else
-    C7="\033[31m"
+    C7=$'\033[31m'
 fi
 
-echo -e "${CWD} (${CT}${TOKENS}${R})  5h:${C5}${FIVE_HR_REM}%${R} 7d:${C7}${SEVEN_DAY_REM}%${R}"
+# Calculate column widths for alignment
+CWD_LEN=${#CWD}
+TOKENS_LEN=$((${#TOKENS} + 2))  # +2 for parens
+COL1=$((CWD_LEN > 17 ? CWD_LEN : 17))  # min width for "session-directory"
+COL2=$((TOKENS_LEN > 7 ? TOKENS_LEN : 7))  # min width for "context"
+
+# Header line
+printf "%-${COL1}s  %-${COL2}s  %s\n" "session-directory" "context" "usage"
+# Data line
+printf "%-${COL1}s  ${CT}(%-$((COL2-2))s)${R}  5h:${C5}%s${R} 7d:${C7}%s${R}\n" "$CWD" "$TOKENS" "${FIVE_HR_REM}%" "${SEVEN_DAY_REM}%"
