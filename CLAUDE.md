@@ -48,4 +48,7 @@ Anthropic API returns these headers (not currently exposed to status line):
 }
 ```
 
-`statusline.sh` fetches this and displays remaining % in status line.
+`statusline.sh` fetches this and displays: `{cwd}  5h:XX% 7d:XX%`
+- Current working directory (basename)
+- 5-hour remaining % (color-coded)
+- 7-day remaining % (color-coded)

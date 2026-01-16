@@ -2,19 +2,22 @@
 # Status line script showing Claude usage percentages
 # Calls the same API endpoint as /usage
 
-# Read stdin (status line JSON) but we don't use it for usage data
-cat > /dev/null
+# Read stdin (status line JSON)
+STDIN=$(cat)
+
+# Extract working directory from stdin JSON (relative path only)
+CWD=$(/usr/bin/python3 -c "import sys,json,os; d=json.loads('''$STDIN'''); cwd=d.get('workspace',{}).get('current_dir',''); print(os.path.basename(cwd) if cwd else '')" 2>/dev/null)
 
 # Get OAuth token from keychain
 CREDS=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null)
 if [ -z "$CREDS" ]; then
-    echo "no auth"
+    echo "${CWD}  no auth"
     exit 0
 fi
 
 TOKEN=$(echo "$CREDS" | /usr/bin/python3 -c "import sys,json; print(json.load(sys.stdin).get('claudeAiOauth',{}).get('accessToken',''))" 2>/dev/null)
 if [ -z "$TOKEN" ]; then
-    echo "no token"
+    echo "${CWD}  no token"
     exit 0
 fi
 
@@ -26,7 +29,7 @@ USAGE=$(curl -s --max-time 2 \
     "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
 
 if [ -z "$USAGE" ]; then
-    echo "fetch failed"
+    echo "${CWD}  fetch failed"
     exit 0
 fi
 
@@ -56,4 +59,4 @@ else
 fi
 R="\033[0m"
 
-echo -e "5h:${C5}${FIVE_HR_REM}%${R} 7d:${C7}${SEVEN_DAY_REM}%${R}"
+echo -e "${CWD}  5h:${C5}${FIVE_HR_REM}%${R} 7d:${C7}${SEVEN_DAY_REM}%${R}"
