@@ -8,16 +8,26 @@ STDIN=$(cat)
 # Extract working directory from stdin JSON (relative path only)
 CWD=$(/usr/bin/python3 -c "import sys,json,os; d=json.loads('''$STDIN'''); cwd=d.get('workspace',{}).get('current_dir',''); print(os.path.basename(cwd) if cwd else '')" 2>/dev/null)
 
+# Extract context window tokens (used/available)
+TOKENS=$(/usr/bin/python3 -c "
+import json
+d=json.loads('''$STDIN''')
+cw=d.get('context_window',{})
+used=cw.get('tokens_used',0)
+avail=cw.get('tokens_available',0)
+print(f'{used/1000:.1f}/{avail//1000}k')
+" 2>/dev/null)
+
 # Get OAuth token from keychain
 CREDS=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null)
 if [ -z "$CREDS" ]; then
-    echo "${CWD}  no auth"
+    echo "${CWD} (${TOKENS})  no auth"
     exit 0
 fi
 
 TOKEN=$(echo "$CREDS" | /usr/bin/python3 -c "import sys,json; print(json.load(sys.stdin).get('claudeAiOauth',{}).get('accessToken',''))" 2>/dev/null)
 if [ -z "$TOKEN" ]; then
-    echo "${CWD}  no token"
+    echo "${CWD} (${TOKENS})  no token"
     exit 0
 fi
 
@@ -29,7 +39,7 @@ USAGE=$(curl -s --max-time 2 \
     "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
 
 if [ -z "$USAGE" ]; then
-    echo "${CWD}  fetch failed"
+    echo "${CWD} (${TOKENS})  fetch failed"
     exit 0
 fi
 
@@ -59,4 +69,4 @@ else
 fi
 R="\033[0m"
 
-echo -e "${CWD}  5h:${C5}${FIVE_HR_REM}%${R} 7d:${C7}${SEVEN_DAY_REM}%${R}"
+echo -e "${CWD} (${TOKENS})  5h:${C5}${FIVE_HR_REM}%${R} 7d:${C7}${SEVEN_DAY_REM}%${R}"
