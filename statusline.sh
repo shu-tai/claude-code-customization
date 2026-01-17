@@ -62,13 +62,47 @@ if [ -z "$USAGE" ]; then
     exit 0
 fi
 
-# Parse usage percentages
-FIVE_HR=$(/usr/bin/python3 -c "import sys,json; d=json.loads('''$USAGE'''); print(int(d.get('five_hour',{}).get('utilization',0)))" 2>/dev/null)
-SEVEN_DAY=$(/usr/bin/python3 -c "import sys,json; d=json.loads('''$USAGE'''); print(int(d.get('seven_day',{}).get('utilization',0)))" 2>/dev/null)
+# Parse usage percentages and reset times
+read FIVE_HR_USED FIVE_HR_RESET < <(/usr/bin/python3 -c "
+import json
+from datetime import datetime, timezone
+d=json.loads('''$USAGE''')
+fh=d.get('five_hour',{})
+util=int(fh.get('utilization',0))
+reset_str=fh.get('resets_at','')
+if reset_str:
+    reset=datetime.fromisoformat(reset_str.replace('Z','+00:00'))
+    now=datetime.now(timezone.utc)
+    delta=reset-now
+    secs=max(0,int(delta.total_seconds()))
+    h=secs/3600
+    print(f'{util} {h:.1f}h')
+else:
+    print(f'{util} --')
+" 2>/dev/null)
 
-# Usage values (already percentage used from API)
-FIVE_HR_USED=${FIVE_HR:-0}
-SEVEN_DAY_USED=${SEVEN_DAY:-0}
+read SEVEN_DAY_USED SEVEN_DAY_RESET < <(/usr/bin/python3 -c "
+import json
+from datetime import datetime, timezone
+d=json.loads('''$USAGE''')
+sd=d.get('seven_day',{})
+util=int(sd.get('utilization',0))
+reset_str=sd.get('resets_at','')
+if reset_str:
+    reset=datetime.fromisoformat(reset_str.replace('Z','+00:00'))
+    now=datetime.now(timezone.utc)
+    delta=reset-now
+    secs=max(0,int(delta.total_seconds()))
+    h=secs/3600
+    print(f'{util} {h:.1f}h')
+else:
+    print(f'{util} --')
+" 2>/dev/null)
+
+FIVE_HR_USED=${FIVE_HR_USED:-0}
+SEVEN_DAY_USED=${SEVEN_DAY_USED:-0}
+FIVE_HR_RESET=${FIVE_HR_RESET:---}
+SEVEN_DAY_RESET=${SEVEN_DAY_RESET:---}
 
 # Color based on usage (ANSI) - lower is better
 if [ "$FIVE_HR_USED" -lt 50 ]; then
@@ -87,18 +121,16 @@ else
     C7=$'\033[31m'
 fi
 
-# Build context display string for width calculation
+# Build display strings for width calculation
 CONTEXT_DISPLAY="${TOKEN_USED}/${TOKEN_AVAIL} (${TOKEN_USED_PCT}%)"
-CONTEXT_LEN=${#CONTEXT_DISPLAY}
+USAGE_DISPLAY="${FIVE_HR_RESET}:${FIVE_HR_USED}% ${SEVEN_DAY_RESET}:${SEVEN_DAY_USED}%"
 
 # Calculate column widths for alignment
-CWD_LEN=${#CWD}
-MODEL_LEN=${#MODEL}
-COL1=$((CWD_LEN > 17 ? CWD_LEN : 17))  # min width for "session-directory"
-COL2=$((CONTEXT_LEN > 7 ? CONTEXT_LEN : 7))  # min width for "context"
-COL3=$((MODEL_LEN > 5 ? MODEL_LEN : 5))  # min width for "model"
+COL1=$((${#CWD} > 17 ? ${#CWD} : 17))  # min width for "session-directory"
+COL2=$((${#CONTEXT_DISPLAY} > 7 ? ${#CONTEXT_DISPLAY} : 7))  # min width for "context"
+COL3=$((${#USAGE_DISPLAY} > 5 ? ${#USAGE_DISPLAY} : 5))  # min width for "usage"
 
 # Header line (bold blue)
-printf "${CB}%-${COL1}s${R}  ${CB}%-${COL2}s${R}  ${CB}%-15s${R}  ${CB}%s${R}\n" "session-directory" "context" "usage" "model"
+printf "${CB}%-${COL1}s${R}  ${CB}%-${COL2}s${R}  ${CB}%-${COL3}s${R}  ${CB}%s${R}\n" "session-directory" "context" "usage" "model"
 # Data line (numerator and usage colored, rest default text)
-printf "${R}%-${COL1}s  ${CT}%s${R}/%s (${CT}%s%%${R})%*s  5h:${C5}%-4s${R} 7d:${C7}%-4s${R}  %s\n" "$CWD" "$TOKEN_USED" "$TOKEN_AVAIL" "$TOKEN_USED_PCT" $((COL2 - ${#CONTEXT_DISPLAY})) "" "${FIVE_HR_USED}%" "${SEVEN_DAY_USED}%" "$MODEL"
+printf "${R}%-${COL1}s  ${CT}%s${R}/%s (${CT}%s%%${R})%*s  ${C5}%s:%s${R} ${C7}%s:%s${R}%*s  %s\n" "$CWD" "$TOKEN_USED" "$TOKEN_AVAIL" "$TOKEN_USED_PCT" $((COL2 - ${#CONTEXT_DISPLAY})) "" "$FIVE_HR_RESET" "${FIVE_HR_USED}%" "$SEVEN_DAY_RESET" "${SEVEN_DAY_USED}%" $((COL3 - ${#USAGE_DISPLAY})) "" "$MODEL"
