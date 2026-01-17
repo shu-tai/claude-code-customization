@@ -9,12 +9,12 @@ Custom status line showing context and usage for Claude Code.
 Displays context window and remaining usage in the Claude Code interface:
 
 ```
-session-directory  context     usage            model
-my-project         100.1/200k  5h:42% 7d:92%   Opus 4.5
+session-directory  context            usage            model
+my-project         100.1/200k (50%)   5h:42% 7d:92%   Opus 4.5
 ```
 
 - **session-directory** - Current working directory (basename)
-- **context** - Tokens used / context window size (numerator color-coded)
+- **context** - Tokens used / context window size (percentage used) - color-coded
 - **usage** - 5-hour and 7-day rolling window used (color-coded)
 - **model** - Current model name
 

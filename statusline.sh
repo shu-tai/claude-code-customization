@@ -38,14 +38,15 @@ fi
 
 # Get OAuth token from keychain
 CREDS=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null)
+TOKEN_USED_PCT=$((100 - TOKEN_REM))
 if [ -z "$CREDS" ]; then
-    echo -e "${CWD}  ${CT}${TOKEN_USED}${R}/${TOKEN_AVAIL}  no auth  ${MODEL}"
+    echo -e "${CWD}  ${CT}${TOKEN_USED}${R}/${TOKEN_AVAIL} (${CT}${TOKEN_USED_PCT}%${R})  no auth  ${MODEL}"
     exit 0
 fi
 
 TOKEN=$(echo "$CREDS" | /usr/bin/python3 -c "import sys,json; print(json.load(sys.stdin).get('claudeAiOauth',{}).get('accessToken',''))" 2>/dev/null)
 if [ -z "$TOKEN" ]; then
-    echo -e "${CWD}  ${CT}${TOKEN_USED}${R}/${TOKEN_AVAIL}  no token  ${MODEL}"
+    echo -e "${CWD}  ${CT}${TOKEN_USED}${R}/${TOKEN_AVAIL} (${CT}${TOKEN_USED_PCT}%${R})  no token  ${MODEL}"
     exit 0
 fi
 
@@ -57,7 +58,7 @@ USAGE=$(curl -s --max-time 2 \
     "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
 
 if [ -z "$USAGE" ]; then
-    echo -e "${CWD}  ${CT}${TOKEN_USED}${R}/${TOKEN_AVAIL}  fetch failed  ${MODEL}"
+    echo -e "${CWD}  ${CT}${TOKEN_USED}${R}/${TOKEN_AVAIL} (${CT}${TOKEN_USED_PCT}%${R})  fetch failed  ${MODEL}"
     exit 0
 fi
 
@@ -87,7 +88,7 @@ else
 fi
 
 # Build context display string for width calculation
-CONTEXT_DISPLAY="${TOKEN_USED}/${TOKEN_AVAIL}"
+CONTEXT_DISPLAY="${TOKEN_USED}/${TOKEN_AVAIL} (${TOKEN_USED_PCT}%)"
 CONTEXT_LEN=${#CONTEXT_DISPLAY}
 
 # Calculate column widths for alignment
@@ -100,4 +101,4 @@ COL3=$((MODEL_LEN > 5 ? MODEL_LEN : 5))  # min width for "model"
 # Header line (bold blue)
 printf "${CB}%-${COL1}s${R}  ${CB}%-${COL2}s${R}  ${CB}%-15s${R}  ${CB}%s${R}\n" "session-directory" "context" "usage" "model"
 # Data line (numerator and usage colored, rest default text)
-printf "${R}%-${COL1}s  ${CT}%s${R}/%-$((COL2 - ${#TOKEN_USED} - 1))s  5h:${C5}%-4s${R} 7d:${C7}%-4s${R}  %s\n" "$CWD" "$TOKEN_USED" "$TOKEN_AVAIL" "${FIVE_HR_USED}%" "${SEVEN_DAY_USED}%" "$MODEL"
+printf "${R}%-${COL1}s  ${CT}%s${R}/%s (${CT}%s%%${R})%*s  5h:${C5}%-4s${R} 7d:${C7}%-4s${R}  %s\n" "$CWD" "$TOKEN_USED" "$TOKEN_AVAIL" "$TOKEN_USED_PCT" $((COL2 - ${#CONTEXT_DISPLAY})) "" "${FIVE_HR_USED}%" "${SEVEN_DAY_USED}%" "$MODEL"
