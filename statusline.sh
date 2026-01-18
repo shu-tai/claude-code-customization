@@ -93,8 +93,8 @@ if reset_str:
     now=datetime.now(timezone.utc)
     delta=reset-now
     secs=max(0,int(delta.total_seconds()))
-    h=secs/3600
-    print(f'{util} {h:.1f}h')
+    d=secs/86400
+    print(f'{util} {d:.1f}d')
 else:
     print(f'{util} --')
 " 2>/dev/null)
@@ -133,4 +133,4 @@ COL3=$((${#USAGE_DISPLAY} > 5 ? ${#USAGE_DISPLAY} : 5))  # min width for "usage"
 # Header line (bold blue)
 printf "${CB}%-${COL1}s${R}  ${CB}%-${COL2}s${R}  ${CB}%-${COL3}s${R}  ${CB}%s${R}\n" "session-directory" "context" "usage" "model"
 # Data line (numerator and usage colored, rest default text)
-printf "${R}%-${COL1}s  ${CT}%s${R}/%s (${CT}%s%%${R})%*s  ${C5}%s:%s${R} ${C7}%s:%s${R}%*s  %s\n" "$CWD" "$TOKEN_USED" "$TOKEN_AVAIL" "$TOKEN_USED_PCT" $((COL2 - ${#CONTEXT_DISPLAY})) "" "$FIVE_HR_RESET" "${FIVE_HR_USED}%" "$SEVEN_DAY_RESET" "${SEVEN_DAY_USED}%" $((COL3 - ${#USAGE_DISPLAY})) "" "$MODEL"
+printf "${R}%-${COL1}s  ${CT}%s${R}/%s (${CT}%s%%${R})%*s  ${R}%s:${C5}%s${R} ${R}%s:${C7}%s${R}%*s  %s\n" "$CWD" "$TOKEN_USED" "$TOKEN_AVAIL" "$TOKEN_USED_PCT" $((COL2 - ${#CONTEXT_DISPLAY})) "" "$FIVE_HR_RESET" "${FIVE_HR_USED}%" "$SEVEN_DAY_RESET" "${SEVEN_DAY_USED}%" $((COL3 - ${#USAGE_DISPLAY})) "" "$MODEL"
